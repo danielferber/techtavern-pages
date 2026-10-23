@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://techtavern.danielferber.com.br/sitemap.xml

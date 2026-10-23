@@ -1,0 +1,167 @@
+/* Foto da página About */
+img[src*="foto.jpg"] {
+  float: right;
+  width: 200px;
+  height: auto;
+  margin: 0 0 1rem 1.5rem;
+  border-radius: 8px;
+}
+
+/* 1. Fundo e texto geral */
+body {
+  background-color: #FAFAF7;
+  color: #2D3748;
+  font-size: 1rem;
+}
+
+/* 2. Links e acentos: âmbar escuro para texto (contraste >= 4.5:1);
+   #D97706 fica reservado para bordas e detalhes */
+a {
+  color: #B45309;
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  color: #92400E;
+}
+
+/* O tema pinta estes links com highlightColor (#D97706) via seletor mais específico */
+.content a,
+.warning a,
+.authorbox__description a,
+.toc__menu a {
+  color: #B45309;
+}
+
+.content a:hover,
+.warning a:hover,
+.authorbox__description a:hover,
+.meta a:hover {
+  color: #92400E;
+}
+
+/* 3. Cabeçalho e banner da taverna: fundo, glow do lampião, título e subtítulo */
+.header {
+  background: linear-gradient(rgba(15, 10, 5, 0.35), rgba(15, 10, 5, 0.35)), #1a120b url('../images/banner-taverna-2.webp') center/cover no-repeat;
+}
+
+@media screen and (min-width: 767px) {
+  .menu__list {
+    justify-content: flex-end;
+    background: transparent;
+  }
+}
+
+/* Menu no mobile: marrom da taverna em vez do cinza padrão do tema */
+@media screen and (max-width: 766px) {
+  .menu__btn,
+  .menu__list {
+    background: rgba(26, 18, 11, 0.92);
+  }
+}
+
+.logo {
+  padding: 10px 25px;
+}
+
+.logo--mixed .logo__img {
+  max-width: 64px;
+  max-height: 64px;
+  filter: drop-shadow(0 0 18px rgba(217, 119, 6, 0.85)) drop-shadow(0 0 8px rgba(251, 191, 36, 0.65));
+  transition: filter 0.3s ease;
+}
+
+.logo--mixed:hover .logo__img {
+  filter: drop-shadow(0 0 36px rgba(217, 119, 6, 1)) drop-shadow(0 0 16px rgba(251, 191, 36, 0.9));
+}
+
+.logo__title {
+  color: #FAFAF7;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  font-size: 1.5rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.logo__tagline {
+  color: #FBBF24;
+  font-weight: 700;
+  padding-top: 4px;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+/* 4. Títulos dos widgets da barra lateral */
+.widget__title {
+  color: #432818;
+  border-bottom: 2px solid #D97706;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  padding-bottom: 5px;
+}
+
+/* 5. Cards de posts na listagem */
+.list__item {
+  background-color: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.list__item:hover {
+  box-shadow: 0 4px 15px rgba(217, 119, 6, 0.08);
+  border-color: #f59e0b;
+}
+
+/* 6. Botões e paginação */
+.btn,
+.pagination__item--current {
+  background-color: #b45309;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+}
+
+.btn:hover,
+.pagination__item:hover {
+  background-color: #92400e;
+  color: #ffffff;
+}
+
+/* 6b. Tags/categorias em estilo botão âmbar (o fundo fica no container) */
+.tags__item {
+  background-color: #b45309;
+  border-radius: 4px;
+}
+
+.tags__item:hover {
+  background-color: #92400e;
+}
+
+.tags__link {
+  color: #ffffff;
+}
+
+/* 7. Blocos de código: cores e fundo vêm do estilo github-dark (hugo.toml) */
+pre {
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+code {
+  font-family: 'Fira Code', 'JetBrains Mono', monospace;
+  background-color: #e2e8f0;
+  color: #92400E;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+pre code {
+  background-color: transparent;
+  color: inherit;
+}
