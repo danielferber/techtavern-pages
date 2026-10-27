@@ -1,0 +1,160 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Whats this? IOException: Write end dead - Daniel Ferber's Technical Tavern</title><script>(function(e,t){e[t]=e[t].replace("no-js","js")})(document.documentElement,"className")</script><meta name=description content><meta property="og:url" content="https://techtavern.danielferber.com.br/posts/whats-this-ioexception-write-end-dead/"><meta property="og:site_name" content="Daniel Ferber's Technical Tavern"><meta property="og:title" content="Whats this? IOException: Write end dead"><meta property="og:description" content="I like Java very much. Nevertheless, there are things I cannot stand in Java. Sure, and one of them are undocumented exceptions from the Java API, that nobody can explain.
+I will talk about “Write end dead” IOExceptions. What does this mean? Why did this happen? Even if googling around, it is difficult to find a clear answer.
+This article is a full explanation to understand this exception and shows how to fix your code. Just continue reading…"><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2008-07-16T00:00:00+00:00"><meta property="article:modified_time" content="2008-07-16T00:00:00+00:00"><meta itemprop=name content="Whats this? IOException: Write end dead"><meta itemprop=description content="I like Java very much. Nevertheless, there are things I cannot stand in Java. Sure, and one of them are undocumented exceptions from the Java API, that nobody can explain.
+I will talk about “Write end dead” IOExceptions. What does this mean? Why did this happen? Even if googling around, it is difficult to find a clear answer.
+This article is a full explanation to understand this exception and shows how to fix your code. Just continue reading…"><meta itemprop=datePublished content="2008-07-16T00:00:00+00:00"><meta itemprop=dateModified content="2008-07-16T00:00:00+00:00"><meta itemprop=wordCount content="952"><meta name=twitter:card content="summary"><meta name=twitter:title content="Whats this? IOException: Write end dead"><meta name=twitter:description content="I like Java very much. Nevertheless, there are things I cannot stand in Java. Sure, and one of them are undocumented exceptions from the Java API, that nobody can explain.
+I will talk about “Write end dead” IOExceptions. What does this mean? Why did this happen? Even if googling around, it is difficult to find a clear answer.
+This article is a full explanation to understand this exception and shows how to fix your code. Just continue reading…"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Open+Sans:ital,wght@0,400;0,700;1,400&display=swap"><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/custom.css><link rel="shortcut icon" href=/favicon.ico><script defer src=https://cloud.umami.is/script.js data-website-id=72801b8b-d227-47a4-a782-2b16958ed41f></script></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class="logo logo--mixed"><a class=logo__link href=/ title="Daniel Ferber's Technical Tavern" rel=home><div class="logo__item logo__imagebox"><img class=logo__img src=/img/logo.png></div><div class="logo__item logo__text"><div class=logo__title>Daniel Ferber's Technical Tavern</div><div class=logo__tagline>Lets have some drink and discuss a bit about random Software Engineering.</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/about/><span class=menu__text>About</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>Whats this? IOException: Write end dead</h1><div class="post__meta meta"><div class="meta__item-datetime meta__item"><svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0a14 14 0 110 28 1 1 0 010-28m0 3a3 3 0 100 22 3 3 0 000-22m1 4h-2v8.4l6.8 4.4L22 18l-6-3.8z"/></svg><time class=meta__text datetime=2008-07-16T00:00:00Z>2008-07-16</time></div><div class="meta__item-readingtime meta__item"><span class=meta__text>5 min read</span></div></div></header><div class="post__toc toc"><div class=toc__title>Page content</div><div class=toc__menu><nav id=TableOfContents><ul><li><ul><li></li></ul></li></ul></nav></div></div><div class="content post__content clearfix"><p>I like Java very much. Nevertheless, there are things I cannot stand in Java. Sure, and one of them are undocumented exceptions from the Java API, that nobody can explain.</p><p>I will talk about “Write end dead” IOExceptions. What does this mean? Why did this happen? Even if googling around, it is difficult to find a clear answer.</p><p>This article is a full explanation to understand this exception and shows how to fix your code. Just continue reading…</p><h4 id=what-happens>What happens</h4><p>You run your Java application and get:</p><div class=highlight><pre tabindex=0 style=color:#e6edf3;background-color:#0d1117;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-fallback data-lang=fallback><span style=display:flex><span>java.io.IOException: Write end dead
+</span></span><span style=display:flex><span>    at java.io.PipedInputStream.read(PipedInputStream.java:244)
+</span></span><span style=display:flex><span>    at java.io.PipedInputStream.read(PipedInputStream.java:305)
+</span></span><span style=display:flex><span>    ...
+</span></span></code></pre></div><p>Even worse, this exception is not deterministic! You program may sometimes run perfectly, and sometimes crash.</p><h4 id=what-to-blame>What to blame</h4><p>PipedInputStream and PipedOutputStream are very sensitive to threads.</p><p>“Write end dead” exceptions will arise when you have:</p><ol><li>A PipedInputStream connected to a PipedOutputStream and</li><li>The ends of these pipe are read/writen by two different threads</li><li>The threads finish without closing their side of the pipe.</li></ol><p>If you encapsulate the PipedInputStream into a BufferendInputStream and/or encapsulate the PipedOutpuStream into a BufferedOutputStream, then the problem will get even more non-deterministic.</p><h4 id=what-to-fix>What to fix</h4><p>When using PipedInputStream and PipedOutputStream, now consider:</p><ul><li>A thread that writes to a stream should always close the OutputStream before terminating.</li></ul><p>In fact, when you read the JavaDoc for PipedInputStream, you will find an advice:</p><blockquote><p>“If a thread was providing data bytes to the connected piped output stream, but the thread is no longer alive, then an IOException is thrown.”</p></blockquote><p>Unfortunately, the JavaDoc does explain that this IOException is a “Write end dead” exception.</p><p>Also, consider, to avoid other types of problems:</p><ul><li>The PipedInputStream should always be read by the same thread. The PipedOutputStream should always be written by the same thread.</li><li>Of course, the thread of the PipedInputStream should not be the same as the one of the PipedOutputStream, or unexpected deadlock might happen.</li><li>In general, any InputStream or OutputStream should never be shared among different threads.</li></ul><h4 id=what-to-know-but-that-is-easily-fogotten>What to know, but that is easily fogotten</h4><p>Pipes are naturally intended to be accessed by two threads, where one thread writes (produces) data to the pipe, and the other reads (consumes) the data.</p><p>Those threads may be running at different speeds. If the producer is faster than the consumer, the pipe will buffer some amount of data. But if even the buffer gets full, then the producer is put to sleep until the consumer reads more bytes and frees again some space on the buffer.</p><p>If the consumer is faster than the producer, then the buffer will become empty and the consumer will be put to sleep, until the producer writes enough bytes to the pipe.</p><p>When the producer has nothing more to write to the pipe, then it should close the stream. The consumer will be signaled with a special error when the pipes becomes empty.</p><p>When the consumer does not want to receive data anymore, then it should close the stream. The producer will be interrupted with a special error the next time it tries to write to the pipe.</p><h4 id=example>Example</h4><p>Suppose this typical example of producer/consumer:</p><p>The producer class:</p><div class=highlight><pre tabindex=0 style=color:#e6edf3;background-color:#0d1117;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-gdscript3 data-lang=gdscript3><span style=display:flex><span>public <span style=color:#ff7b72>class</span> Producer <span style=color:#ff7b72>extends</span> <span style=color:#f0883e;font-weight:700>Thread</span> {
+</span></span><span style=display:flex><span>    <span style=color:#f0883e;font-weight:700>int</span> interval;
+</span></span><span style=display:flex><span>    <span style=color:#f0883e;font-weight:700>int</span> iterations;
+</span></span><span style=display:flex><span>    OutputStream os;
+</span></span><span style=display:flex><span>    byte data[] <span style=color:#ff7b72;font-weight:700>=</span> { <span style=color:#a5d6ff>&#39;a&#39;</span>, <span style=color:#a5d6ff>&#39;b&#39;</span>, <span style=color:#a5d6ff>&#39;b&#39;</span> };
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    public Producer(<span style=color:#f0883e;font-weight:700>int</span> interval, <span style=color:#f0883e;font-weight:700>int</span> iterations, OutputStream os) {
+</span></span><span style=display:flex><span>        this<span style=color:#ff7b72;font-weight:700>.</span>interval <span style=color:#ff7b72;font-weight:700>=</span> interval;
+</span></span><span style=display:flex><span>        this<span style=color:#ff7b72;font-weight:700>.</span>iterations <span style=color:#ff7b72;font-weight:700>=</span> iterations;
+</span></span><span style=display:flex><span>        this<span style=color:#ff7b72;font-weight:700>.</span>os <span style=color:#ff7b72;font-weight:700>=</span> os;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#f85149>@</span>Override
+</span></span><span style=display:flex><span>    public void run() {
+</span></span><span style=display:flex><span>        try {
+</span></span><span style=display:flex><span>            System<span style=color:#ff7b72;font-weight:700>.</span>out<span style=color:#ff7b72;font-weight:700>.</span>println(<span style=color:#a5d6ff>&#34;Producer started&#34;</span>);
+</span></span><span style=display:flex><span>            <span style=color:#ff7b72>for</span> (<span style=color:#f0883e;font-weight:700>int</span> i <span style=color:#ff7b72;font-weight:700>=</span> <span style=color:#a5d6ff>0</span>; i <span style=color:#ff7b72;font-weight:700>&lt;</span> iterations; i<span style=color:#ff7b72;font-weight:700>++</span>) {
+</span></span><span style=display:flex><span>                System<span style=color:#ff7b72;font-weight:700>.</span>out<span style=color:#ff7b72;font-weight:700>.</span>println(<span style=color:#a5d6ff>&#34;Produce...&#34;</span>);
+</span></span><span style=display:flex><span>                System<span style=color:#ff7b72;font-weight:700>.</span>out<span style=color:#ff7b72;font-weight:700>.</span>flush();
+</span></span><span style=display:flex><span>                os<span style=color:#ff7b72;font-weight:700>.</span>write(data);
+</span></span><span style=display:flex><span>                synchronized (this) {
+</span></span><span style=display:flex><span>                    this<span style=color:#ff7b72;font-weight:700>.</span>wait(interval);
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            os<span style=color:#ff7b72;font-weight:700>.</span>close();
+</span></span><span style=display:flex><span>            System<span style=color:#ff7b72;font-weight:700>.</span>out<span style=color:#ff7b72;font-weight:700>.</span>println(<span style=color:#a5d6ff>&#34;Producer finished&#34;</span>);
+</span></span><span style=display:flex><span>        } catch (IOException e) {
+</span></span><span style=display:flex><span>            e<span style=color:#ff7b72;font-weight:700>.</span>printStackTrace();
+</span></span><span style=display:flex><span>        } catch (InterruptedException e) {
+</span></span><span style=display:flex><span>            e<span style=color:#ff7b72;font-weight:700>.</span>printStackTrace();
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The consumer class:</p><div class=highlight><pre tabindex=0 style=color:#e6edf3;background-color:#0d1117;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-gdscript3 data-lang=gdscript3><span style=display:flex><span>public <span style=color:#ff7b72>class</span> Consumer <span style=color:#ff7b72>extends</span> <span style=color:#f0883e;font-weight:700>Thread</span> {
+</span></span><span style=display:flex><span>	<span style=color:#f0883e;font-weight:700>int</span> interval;
+</span></span><span style=display:flex><span>	InputStream is;
+</span></span><span style=display:flex><span>	<span style=color:#ff7b72>static</span> final <span style=color:#f0883e;font-weight:700>int</span> max <span style=color:#ff7b72;font-weight:700>=</span> <span style=color:#a5d6ff>10</span>;
+</span></span><span style=display:flex><span>	byte data[] <span style=color:#ff7b72;font-weight:700>=</span> new byte[max];
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	public Consumer(<span style=color:#f0883e;font-weight:700>int</span> interval, InputStream is) {
+</span></span><span style=display:flex><span>		super();
+</span></span><span style=display:flex><span>		this<span style=color:#ff7b72;font-weight:700>.</span>interval <span style=color:#ff7b72;font-weight:700>=</span> interval;
+</span></span><span style=display:flex><span>		this<span style=color:#ff7b72;font-weight:700>.</span>is <span style=color:#ff7b72;font-weight:700>=</span> is;
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#f85149>@</span>Override
+</span></span><span style=display:flex><span>	public void run() {
+</span></span><span style=display:flex><span>		try {
+</span></span><span style=display:flex><span>			System<span style=color:#ff7b72;font-weight:700>.</span>out<span style=color:#ff7b72;font-weight:700>.</span>println(<span style=color:#a5d6ff>&#34;Consumer started&#34;</span>);
+</span></span><span style=display:flex><span>			<span style=color:#f0883e;font-weight:700>int</span> amount;
+</span></span><span style=display:flex><span>			<span style=color:#ff7b72>while</span> ((amount <span style=color:#ff7b72;font-weight:700>=</span> is<span style=color:#ff7b72;font-weight:700>.</span>read(data)) <span style=color:#ff7b72;font-weight:700>&gt;=</span> <span style=color:#a5d6ff>0</span>) {
+</span></span><span style=display:flex><span>				<span style=color:#f0883e;font-weight:700>String</span> s <span style=color:#ff7b72;font-weight:700>=</span> new <span style=color:#f0883e;font-weight:700>String</span>(data, <span style=color:#a5d6ff>0</span>, amount);
+</span></span><span style=display:flex><span>				System<span style=color:#ff7b72;font-weight:700>.</span>out<span style=color:#ff7b72;font-weight:700>.</span>println(MessageFormat<span style=color:#ff7b72;font-weight:700>.</span>format(<span style=color:#a5d6ff>&#34;Consumed {0} bytes: {1}&#34;</span>, amount, s));
+</span></span><span style=display:flex><span>				synchronized (this) {
+</span></span><span style=display:flex><span>					wait(interval);
+</span></span><span style=display:flex><span>				}
+</span></span><span style=display:flex><span>			}
+</span></span><span style=display:flex><span>                        is<span style=color:#ff7b72;font-weight:700>.</span>close();
+</span></span><span style=display:flex><span>			System<span style=color:#ff7b72;font-weight:700>.</span>out<span style=color:#ff7b72;font-weight:700>.</span>println(<span style=color:#a5d6ff>&#34;Consumer finished&#34;</span>);
+</span></span><span style=display:flex><span>		} catch (IOException e) {
+</span></span><span style=display:flex><span>			e<span style=color:#ff7b72;font-weight:700>.</span>printStackTrace();
+</span></span><span style=display:flex><span>		} catch (InterruptedException e) {
+</span></span><span style=display:flex><span>			e<span style=color:#ff7b72;font-weight:700>.</span>printStackTrace();
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The main method:</p><div class=highlight><pre tabindex=0 style=color:#e6edf3;background-color:#0d1117;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-fallback data-lang=fallback><span style=display:flex><span>public class Tester implements Runnable {
+</span></span><span style=display:flex><span>	public void run() {
+</span></span><span style=display:flex><span>		PipedOutputStream os = new PipedOutputStream();
+</span></span><span style=display:flex><span>		PipedInputStream is = new PipedInputStream();
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		try {
+</span></span><span style=display:flex><span>			is.connect(os);
+</span></span><span style=display:flex><span>		} catch (IOException e) {
+</span></span><span style=display:flex><span>			// This is not possible, as piped streams
+</span></span><span style=display:flex><span>                        // are being used correctly.
+</span></span><span style=display:flex><span>			assert false;
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		Producer producer = new Producer(5, 10, os);
+</span></span><span style=display:flex><span>		Consumer consumer = new Consumer(5, is);
+</span></span><span style=display:flex><span>		producer.start();
+</span></span><span style=display:flex><span>		consumer.start();
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	public static void main(String[] args) {
+</span></span><span style=display:flex><span>		Tester tester = new Tester();
+</span></span><span style=display:flex><span>		tester.run();
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>This will produce something like (order of output varies from execution to execution):</p><div class=highlight><pre tabindex=0 style=color:#e6edf3;background-color:#0d1117;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-fallback data-lang=fallback><span style=display:flex><span>Producer started
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumer started
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 6 bytes: abbabb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Producer finished
+</span></span><span style=display:flex><span>Consumer finished
+</span></span></code></pre></div><p>If the lines:</p><div class=highlight><pre tabindex=0 style=color:#e6edf3;background-color:#0d1117;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-fallback data-lang=fallback><span style=display:flex><span>os.close()
+</span></span></code></pre></div><p>and</p><div class=highlight><pre tabindex=0 style=color:#e6edf3;background-color:#0d1117;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-fallback data-lang=fallback><span style=display:flex><span>is.close()
+</span></span></code></pre></div><p>are removed, then the streams will not closed. That means that the producer thread will finish while the consumer thread is still running and trying to read. The consumer will be interrupted with a “Write end dead” exception.</p><p>The output of the broken implementation:</p><div class=highlight><pre tabindex=0 style=color:#e6edf3;background-color:#0d1117;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-fallback data-lang=fallback><span style=display:flex><span>Producer started
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumer started
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 6 bytes: abbabb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Produce...
+</span></span><span style=display:flex><span>Consumed 3 bytes: abb
+</span></span><span style=display:flex><span>Producer finished
+</span></span><span style=display:flex><span>java.io.IOException: Write end dead
+</span></span><span style=display:flex><span>	at java.io.PipedInputStream.read(PipedInputStream.java:244)
+</span></span><span style=display:flex><span>	at java.io.PipedInputStream.read(PipedInputStream.java:305)
+</span></span><span style=display:flex><span>	at java.io.InputStream.read(InputStream.java:89)
+</span></span><span style=display:flex><span>	at Consumer.run(Consumer.java:23)
+</span></span></code></pre></div></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Daniel Ferber avatar" src=/img/avatar.jpg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Daniel Ferber</span></div><div class=authorbox__description>Software engineer & researcher | AI-assisted specification and documentation | 17 years building mission-critical planning software at Petrobras | MSc Computer Science, Unicamp</div></div><nav class="pager flex"><div class="pager__item pager__item--next"><a class=pager__link href=/posts/backing-up-dvd-movies-on-linux-now-useful/ rel=next><span class=pager__subtitle>Next&#8201;»</span><p class=pager__title>Backing up DVD movies on Linux now useful</p></a></div></nav><section class=comments><script src=https://giscus.app/client.js data-repo=danielferber/techtavern-pages data-repo-id=R_kgDOVN6pqw data-category=Announcements data-category-id=DIC_kwDOVN6pq84DJY2X data-mapping=pathname data-strict=1 data-reactions-enabled=1 data-emit-metadata=0 data-input-position=top data-theme=light data-lang=en data-loading=lazy crossorigin=anonymous async></script></section></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><input class=widget-search__field type=search placeholder=Search… name=q aria-label=Search…>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://techtavern.danielferber.com.br/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/posts/we-swapped-the-contractor-for-ai/>We swapped the contractor for AI, not the way we work</a></li><li class=widget__item><a class=widget__link href=/posts/java-and-maven-as-code/>Java and Maven as code</a></li><li class=widget__item><a class=widget__link href=/posts/tomcat-as-code-without-a-plugin/>Tomcat as code, without a plugin</a></li><li class=widget__item><a class=widget__link href=/posts/tomee-as-code-same-server-in-a-container/>TomEE as code: the same server in a container</a></li><li class=widget__item><a class=widget__link href=/posts/tomee-as-code-server-in-the-repository/>TomEE as code: the server in the repository</a></li></ul></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">Social</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=LinkedIn rel="noopener noreferrer" href=https://linkedin.com/in/danielfelixferber target=_blank><svg class="widget-social__link-icon icon icon-linkedin" width="24" height="24" viewBox="0 0 352 352"><path d="M0 40v272c0 21.9 18.1 40 40 40h272c21.9.0 40-18.1 40-40V40c0-21.9-18.1-40-40-40H40C18.1.0.0 18.1.0 40zm312-8c4.6.0 8 3.4 8 8v272c0 4.6-3.4 8-8 8H40c-4.6.0-8-3.4-8-8V40c0-4.6 3.4-8 8-8H312zM59.5 87c0 15.2 12.3 27.5 27.5 27.5s27.5-12.3 27.5-27.5S102.2 59.5 87 59.5 59.5 71.8 59.5 87zM187 157h-1v-21h-45v152h47v-75c0-19.8 3.9-39 28.5-39 24.2.0 24.5 22.4 24.5 40v74h47v-83.5c0-40.9-8.7-72-56.5-72-23 0-38.2 12.6-44.5 24.5zM64 288h47.5V136H64V288z"/></svg>
+<span>LinkedIn</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/danielferber target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2C329 348.2 384 276.4 384 191.7 384 85.8 298 0 192 0z"/></svg>
+<span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title="Useful Toys" rel="noopener noreferrer" href=https://github.com/useful-toys/ target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2C329 348.2 384 276.4 384 191.7 384 85.8 298 0 192 0z"/></svg>
+<span>Useful Toys</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2026 Daniel Ferber's Technical Tavern.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>
